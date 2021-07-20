@@ -5,12 +5,14 @@ const app = express();
 
 connectDb();
 
+app.use(express.json({ extended: false }));
+
 app.get('/', (request, response) => {
     response.send('API RUNNING');
 });
 
 
-app.use('/api/users', require('./routes/api/users'));
+app.use('/api/users', require('./routes/api/user'));
 
 app.use('/api/auth', require('./routes/api/auth'));
 
