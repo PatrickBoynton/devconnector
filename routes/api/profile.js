@@ -2,7 +2,6 @@ const express = require('express');
 const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator/check');
 const Profile = require('../../models/Profile');
-const User = require('../../models/User');
 const router = express.Router();
 
 // @route       GET api/profile/me
@@ -107,6 +106,28 @@ router.get('/', async (request, response) => {
     } catch (error) {
         console.error(error.message);
         response.status(500).send('Server Error.');
+    }
+});
+
+// @route       GET api/profile/user/user_id
+// @description Get a single profile by id
+// @access      public
+router.get('/user/:user_id', async (request, response) => {
+    try {
+        const profile = Profile.findOne({ user: request.params.user_id })
+            .populate('user', ['name', 'avatar']);
+
+        if (!profile) return response.status(404)
+            .json({ message: 'There is no profile for this user.' });
+
+        response.json(profile);
+    } catch (error) {
+        console.error(error.message);
+
+        if (error.kind === 'ObjectId') return response.status(404)
+            .json({ message: 'There is no profile for this user.' });
+
+        response.status(500).send('Internal server error.');
     }
 });
 
