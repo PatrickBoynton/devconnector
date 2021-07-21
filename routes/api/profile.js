@@ -2,6 +2,7 @@ const express = require('express');
 const auth = require('../../middleware/auth');
 const { check, validationResult } = require('express-validator/check');
 const Profile = require('../../models/Profile');
+const User = require('../../models/User');
 const router = express.Router();
 
 // @route       GET api/profile/me
@@ -129,6 +130,21 @@ router.get('/user/:user_id', async (request, response) => {
 
         response.status(500).send('Internal server error.');
     }
+
+    // @route       DELETE api/profile
+    // @description Delete a profile
+    // @access      private
+    router.delete('/api/profile', async (request, response) => {
+        try {
+            await Profile.findOneAndRemove({ user: request.user.id });
+
+            await User.findOneAndRemove({ _id: request.user.id });
+
+            response.json({ message: 'User deleted!' });
+        } catch (error) {
+
+        }
+    });
 });
 
 module.exports = router;
