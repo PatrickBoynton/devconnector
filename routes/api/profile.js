@@ -96,4 +96,18 @@ router.post('/', [auth, check('status', 'Status is required.').not().isEmpty(),
     }
 });
 
+// @route       GET api/profile/
+// @description Get all profiles
+// @access      public
+router.get('/', async (request, response) => {
+    try {
+        const profiles = await Profile.find().populate('user', ['name', 'avatar']);
+
+        response.json(profiles);
+    } catch (error) {
+        console.error(error.message);
+        response.status(500).send('Server Error.');
+    }
+});
+
 module.exports = router;
