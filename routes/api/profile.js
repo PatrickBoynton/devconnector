@@ -134,7 +134,7 @@ router.get('/user/:user_id', async (request, response) => {
     // @route       DELETE api/profile
     // @description Delete a profile
     // @access      private
-    router.delete('/api/profile', async (request, response) => {
+    router.delete('/api/profile', auth, async (request, response) => {
         try {
             await Profile.findOneAndRemove({ user: request.user.id });
 
@@ -146,5 +146,52 @@ router.get('/user/:user_id', async (request, response) => {
         }
     });
 });
+
+// @route       PUT api/profile/experience
+// @description Add profile experience.
+// @access      private
+router.put('/experience', [auth, [
+    check('title', 'Title is required.').not().isEmpty(),
+    check('company', 'Company is required.').not().isEmpty(),
+    check('from', 'From date is required.').not().isEmpty(),
+]], async (request, response) => {
+    const errors = validationResult(request);
+
+    if (!errors.isEmpty()) return response.status(400).json({ errors: errors.array() });
+
+    const {
+        title,
+        company,
+        location,
+        from,
+        to,
+        current,
+        description,
+    } = request.body;
+
+    const newExperience = {
+        title,
+        company,
+        location,
+        from,
+        to,
+        current,
+        description
+    };
+
+    try {
+        const profile = await Profile.findOne({ user: request.user.id });
+
+        profile.experience.unshift(newExperience);
+
+        await profile.save();
+
+        response.json();
+    } catch (error) {
+        console.error(error.message);
+        response.status(500).send('Internal server error.');
+    }
+});
+
 
 module.exports = router;
