@@ -1,6 +1,6 @@
 const express = require('express');
 const auth = require('../../middleware/auth');
-const { check, validationResult } = require('express-validator/check');
+const { check, validationResult } = require('express-validator');
 const Profile = require('../../models/Profile');
 const User = require('../../models/User');
 const router = express.Router();
@@ -205,6 +205,74 @@ router.delete('/experience/:exp_id', auth, async (request, response) => {
             .indexOf(request.params.exp_id);
 
         profile.experience.splice(removeIndex, 1);
+
+        await profile.save();
+
+        response.json(profile);
+    } catch (error) {
+        console.error(error.message);
+        response.status(500).send('Internal server error.');
+    }
+});
+
+// @route       PUT api/profile/education
+// @description Add profile education.
+// @access      private
+router.put('/education', [auth, [
+    check('school', 'School is required.').not().isEmpty(),
+    check('fieldofstudy', 'Field of study is required.').not().isEmpty(),
+    check('from', 'From date is required.').not().isEmpty(),
+]], async (request, response) => {
+    const errors = validationResult(request);
+
+    if (!errors.isEmpty()) return response.status(400).json({ errors: errors.array() });
+
+    const {
+        school,
+        degree,
+        fieldofstudy,
+        from,
+        to,
+        current,
+        description,
+    } = request.body;
+
+    const newEducation = {
+        school,
+        degree,
+        fieldofstudy,
+        from,
+        to,
+        current,
+        description
+    };
+
+    try {
+        const profile = await Profile.findOne({ user: request.user.id });
+
+        profile.education.unshift(newEducation);
+
+        await profile.save();
+
+        response.json();
+    } catch (error) {
+        console.error(error.message);
+        response.status(500).send('Internal server error.');
+    }
+});
+
+
+// @route DELETE api/profile/education/edu_id
+// @description  Delete user education
+// @access       private
+router.delete('/education/:edu_id', auth, async (request, response) => {
+    try {
+        const profile = await Profile.findOne({ user: request.user.id });
+
+        const removeIndex = profile.education.map(item => item.id)
+            .indexOf(request.params.edu_id);
+
+        profile.education.splice(removeIndex, 1);
 
         await profile.save();
 
